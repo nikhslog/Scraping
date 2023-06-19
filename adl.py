@@ -1,15 +1,18 @@
-# Scraping 1000 entries from yelu.in
+# Defining the location first and then scraping the only data which has the rating higher than '4' and has a verified tag.
 
 import requests
 from bs4 import BeautifulSoup
 import json
+
+# Define the place for scraping (e.g., 'bangalore','mumbai',etc)
+place = 'bangalore'
 
 data = []
 z = 1
 
 # Loop through the pages to scrape data
 for j in range(1, 100):
-    url = f"https://www.yelu.in/location/mumbai/{j}"
+    url = f"https://www.yelu.in/location/{place}/{j}"
 
     # Send a GET request to the URL
     response = requests.get(url)
@@ -26,8 +29,6 @@ for j in range(1, 100):
         company_description = company.find('div', class_='details').text.strip()
         company_link = company.h4.a['href']
         image = company.img['data-src']
-
-
         company_data = {
             'company_number': z,
             'company_name': company_name,
@@ -37,19 +38,22 @@ for j in range(1, 100):
             'company_logo': f'https://www.yelu.in/{image}'
         }
 
-        # Check if company rating is available
+        # Check if company rating is available and higher than 4.0
         if company and company.find('div', {'class': 'rate'}):
             company_rating = company.find('div', {'class': 'rate'}).text
-            company_data['company_rating'] = company_rating
+            if float(company_rating) > 4.0:
+                company_data['company_rating'] = company_rating
+            else:
+                continue
         else:
-            company_data['company_rating'] = 'Rating not available.'
+            continue
 
         # Check if company has a verified tag
         if company and company.find('u', {'class': 'v'}):
             company_verified_tag = company.find('u', {'class': 'v'}).text.strip()
             company_data['company_verified_tag'] = company_verified_tag
         else:
-            company_data['company_verified_tag'] = 'Not Verified.'
+            continue
 
         # Append the company data to the list
         data.append(company_data)
@@ -64,13 +68,8 @@ for j in range(1, 100):
         break
 
 # Save the scraped data in JSON format
-with open('scraped_data.json', 'w') as file:
+with open('scraped_data1.json', 'w') as file:
     json.dump(data, file, indent=4)
 
-print("Data saved successfully in scraped_data.json")
-
-
-
-
-
+print("Data saved successfully in scraped_data1.json")
 
